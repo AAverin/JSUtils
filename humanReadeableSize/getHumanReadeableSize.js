@@ -23,13 +23,13 @@
 * @return float - result of conversion to human readeable format rounded to 2nd significan digit after decimal point
 *
 * Usecases:
-* getHumanReadableSize(14240780288) - converts '14240780288' bytes to the closest possible value > 0, that will be 13.3Gib
-* getHumanReadableSize(14240780288, '', ' b') - assumes that 'bi'-bytes are inputed and are converted to bytes, so it will output 14.2Gb
-* getHumanReadableSize(14240780288, 'Kib', ' b') - assumes that Kibibytes were inputed and should be converted to the closes possible value > 0 and into bytes, that will be 14.2Tb
-* getHumanReadableSize(14240780288, 'Kib', '') - assumes that Kibibytes were inputed and should be converted to the closes possible value > 0 and into 'bi'-bytes, that will be 13.3Tib
-* getHumanReadableSize(14240780288, 'Kib', 'Gb') - assumes that Kibibytes were inputed and should be converted to Gigabytes, that will be 14241Gb
-* getHumanReadableSize(14240780288, 'Kib', 'Gib') - assumes that Kibibytes were inputed and should be converted to Gigabytes, that will be 13581Gb
-* getHumanReadableSize(14240780288, 'Gib', 'Kib') - assumes that Gibibytes were inputed and should be converted to Kibibytes, that will be 14932540431269888Kib
+* getHumanReadableSize(14240780288) - converts '14240780288' bytes to the closest possible value > 0, that will be 13.3 GiB
+* getHumanReadableSize(14240780288, '', ' B') - assumes that 'bi'-bytes are inputed and are converted to bytes, so it will output 14.2GB
+* getHumanReadableSize(14240780288, 'KiB', ' B') - assumes that Kibibytes were inputed and should be converted to the closes possible value > 0 and into bytes, that will be 14.2 TB
+* getHumanReadableSize(14240780288, 'KiB', '') - assumes that Kibibytes were inputed and should be converted to the closes possible value > 0 and into 'bi'-bytes, that will be 13.3 TiB
+* getHumanReadableSize(14240780288, 'KiB', 'GB') - assumes that Kibibytes were inputed and should be converted to Gigabytes, that will be 14241 GB
+* getHumanReadableSize(14240780288, 'KiB', 'GiB') - assumes that Kibibytes were inputed and should be converted to Gigabytes, that will be 13581 GB
+* getHumanReadableSize(14240780288, 'GiB', 'KiB') - assumes that Gibibytes were inputed and should be converted to Kibibytes, that will be 14932540431269888 KiB
 */
 var humanReadableFormatRegexp = new RegExp('(\\s|\\w)i?(b|B)');
 getHumanReadableSize = function(data, inputFormat, outputFormat) {
