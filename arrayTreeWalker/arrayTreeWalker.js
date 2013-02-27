@@ -40,17 +40,17 @@ var walkArrayTree = function(array, callback, options) {
 
         var isFinished = false;
         var finishIndex = [];
-        var proceede = array.length == 1;
+        var proceed = array.length == 1;
         for (var i = 0, len = array.length; i < len && !isFinished; i++)  {
             var result =  processFunction(i, array[i]);
-            if (i == 0 && !proceede) {
+            if (i == 0 && !proceed) {
                 if (result[0]) {
-                    proceede = true;
+                    proceed = true;
                 } else {
                     break;
                 }
             } else {
-                if (proceede) {
+                if (proceed) {
                     isFinished |= result[0];
                     if (result[1].length > 0) {
                         finishIndex.concat(result[1]);
