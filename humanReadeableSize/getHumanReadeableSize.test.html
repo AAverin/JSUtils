@@ -1,0 +1,65 @@
+<html>
+
+<head>
+ <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+ <script type="text/javascript" src="getHumanReadeableSize.js"></script>
+</head>
+
+<script type="text/javascript">
+	
+	var testCases = [
+		{
+			params:[14240780288], 
+			result: "13.3 GiB"
+		},
+		{
+			params:[14240780288, '', ' b'],
+			result: "14.2 Gb"
+		},
+		{
+			params:[14240780288, 'Kib', ' b'],
+			result: "14.2 Tb"
+		},
+		{
+			params:[14240780288, 'Kib', ''],
+			result: "13.3 TiB"
+		},
+		{
+			params:[14240780288, 'Kib', 'Gb'],
+			result: "14241 Gb"
+		},
+		{
+			params:[14240780288, 'Kib', 'Gib'],
+			result: "13581 Gib"
+		},
+		{
+			params:[14240780288, 'Gib', 'Kib'],
+			result: "14932540431269888 Kib"
+		}
+	];
+
+	$(document).ready(function() {
+		var testResult = $.map(testCases, function(e, i) {
+			var testResult = getHumanReadableSize.apply(document, e.params);
+			return testResult.localeCompare(e.result) === 0;
+		});
+		var res = true;
+		$.each(testResult, function(i, e) {
+			res &= e;
+			return res;
+		});
+		
+		if (res) {
+			$('#testResults').text("All tests passed correctly");
+		} else {
+			$('#testResults').text("Tests failed. Please notify script developer");
+		}
+	});
+</script>
+
+<body>
+	<div id="testResults">
+	</div>
+</body>
+
+</html>
