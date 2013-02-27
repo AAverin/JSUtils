@@ -2,7 +2,7 @@
 
 Welcome to JSUtils wiki page.
 
-JSUtils is a set of javascript utilities of various sorts that we written by me during my work on different projects.
+JSUtils is a set of javascript utilities of various sorts that were written by me during my work on different projects.
 
 ## ArrayTreeWalker
 
