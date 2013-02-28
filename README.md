@@ -8,7 +8,7 @@ JSUtils is a set of javascript utilities of various sorts that were written by m
 
 Documentation will be written later
 
-## humanReadeableSize
+## humanReadableSize
 This is a simple javascript method that allows to format sizes properly. Implementation was heavily influenced by discussion in [this Stackoveflow thread](http://stackoverflow.com/questions/4498866/actual-numbers-to-the-human-readable-values) and, especially, Amir's example. Regards to the way rounding to significant number after decimal point works goes to [this post](http://www.dacris.com/blog/2011/09/09/javascript-code-snippet-round-to-significant-digits/)
 
 The common problem of size formatting in UI is that backend may return size in any format. Usually it's in bytes, but it can return MB(Megabytes), GB(Gigabytes), or MiB(Mibibytes) and GiB(Gibibytes).
