@@ -43,7 +43,7 @@ var walkArrayTree = function(array, callback, options) {
         var proceed = array.length == 1;
         for (var i = 0, len = array.length; i < len && !isFinished; i++)  {
             var result =  processFunction(i, array[i]);
-            if (i == 0 && !proceed) {
+            if (i === 0 && !proceed) {
                 if (result[0]) {
                     proceed = true;
                 } else {
