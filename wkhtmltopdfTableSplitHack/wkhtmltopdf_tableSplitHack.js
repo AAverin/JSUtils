@@ -123,7 +123,7 @@ $(window).load(function() {
       var splitTable = templateTable.clone();
       var splitTableBody = splitTable.find('tbody');
       splitTableBody.append(trs);
-     
+      
       //pass a new table to a custom process function for some post-processing if required
       if ($.isFunction(onTableSplittedCallback)) {
         splitTable = onTableSplittedCallback(splitTable);
@@ -136,7 +136,7 @@ $(window).load(function() {
     }
 
     var parent = table.parent();
-
+    
     table.removeClass(splitClassName);
 
     if (table.hasClass('charts')) {
@@ -209,7 +209,12 @@ $(window).load(function() {
     })
 
     //add that div to the page and particular index - this is where rendering will take place
-    parent.children().eq(tableIndex - 1).after(collectableDiv);
+    var elementInParent = parent.children().eq(tableIndex);
+    if (elementInParent.length > 0) {
+      elementInParent.before(collectableDiv);
+    } else {
+      parent.children().eq(tableIndex - 1).after(collectableDiv);
+    }
     pageOffset += (collectableDiv.outerHeight() - originalTableHeight);
   }
 
@@ -232,7 +237,7 @@ $(window).load(function() {
         }
         return splittedTable;
       });
-    } 
+    }
   }
   // restore body's padding
   $body.css('padding-left', 0);
