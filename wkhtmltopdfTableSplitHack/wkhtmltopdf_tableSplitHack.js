@@ -123,7 +123,7 @@ $(window).load(function() {
       var splitTable = templateTable.clone();
       var splitTableBody = splitTable.find('tbody');
       splitTableBody.append(trs);
-      
+     
       //pass a new table to a custom process function for some post-processing if required
       if ($.isFunction(onTableSplittedCallback)) {
         splitTable = onTableSplittedCallback(splitTable);
@@ -136,7 +136,7 @@ $(window).load(function() {
     }
 
     var parent = table.parent();
-    
+
     table.removeClass(splitClassName);
 
     if (table.hasClass('charts')) {
@@ -180,7 +180,7 @@ $(window).load(function() {
       //get offset for current page, taking custom pageOffset into consideration
       var trTop = tr.offset().top - currentPageZero - pageOffset;
       if (debug) {
-        aa.text(aa.text() + trTop + " || ");
+        aa.text(aa.text() + "(o:" + tr.offset().top + " : t:" + trTop + " || ");
       }
       //if we fit the page with threshold - go ahead and push tr into tmpTrs array
       if (trTop >= pageHeight - splitThreshold) { //else go to the next page
@@ -198,15 +198,19 @@ $(window).load(function() {
     });
     //save leftower for the page and remove the original table away
     tmpTables.push(tmpTrs);
-    tmpTrs = $([]);    
+    tmpTrs = $([]);
+
+    var originalTableHeight = table.outerHeight();    
     table.remove();
     
     //append each splitted table to a collectable div
     $.each(tmpTables, function(i, trs) {
       appendTable(collectableDiv, trs, i === tmpTables.length - 1);
     })
+
     //add that div to the page and particular index - this is where rendering will take place
     parent.children().eq(tableIndex - 1).after(collectableDiv);
+    pageOffset += (collectableDiv.outerHeight() - originalTableHeight);
   }
 
   while (tablesModified) {
