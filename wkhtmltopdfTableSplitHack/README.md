@@ -35,4 +35,7 @@ BTW, I didn't had time to properly test that, but as soon as wkhtmltopdf doesn't
 Oh, and yea, almost forgot.
 To use this script don't forget to insert it into the HTML you generate PDF's from=)
 
+### A few tips for wkhtmltopdf
+- don't use semi-transparent elements (with opacity < 0) for elements on your pdfs - generating semi-transparent elements takes ~2 times longer.
+
 Dependencies: jQuery.
