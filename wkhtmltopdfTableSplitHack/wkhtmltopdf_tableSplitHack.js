@@ -40,7 +40,7 @@
  */
 var pdfPage = {
   width: 297/25.4, // inches
-  height: 270/25.4, // inches
+  height: 250/25.4, // inches
   margins: {
     top: 26/25.4,
     left: 2/25.4,
@@ -68,8 +68,16 @@ var splitClassName = 'splitForPrint';
 
 
 var debug = false;
+var profile = false;
+var startTime = 0;
+var endTime = 0;
+var tableProcessStart = 0;
+var tableProcessEnd = 0;
+var profileDivsList = [];
+var profileDiv = $('<div>');
 
 $(window).load(function() {
+  startTime = new Date().getTime();
   // get document resolution
   var dpi = $('<div id="dpi"></div>')
     .css({
@@ -123,7 +131,7 @@ $(window).load(function() {
       var splitTable = templateTable.clone();
       var splitTableBody = splitTable.find('tbody');
       splitTableBody.append(trs);
-      
+     
       //pass a new table to a custom process function for some post-processing if required
       if ($.isFunction(onTableSplittedCallback)) {
         splitTable = onTableSplittedCallback(splitTable);
@@ -133,6 +141,14 @@ $(window).load(function() {
       if (!isLastBatch) {
         container.append(breaker.clone());
       }
+    }
+
+    var trWalkProcessStart = 0;
+    var trWalkProcessEnd = 0;
+    var resultsApppendStart = 0;
+    var resultsApppendEnd = 0;
+    if (profile) {
+      tableProcessStart = new Date().getTime();
     }
 
     var parent = table.parent();
@@ -165,6 +181,7 @@ $(window).load(function() {
     var templateTable = table.clone();
     templateTable.find('tbody > tr').remove();
     templateTable.append(tableHeader); //add common header to every template table
+    templateTable.append("<tr class='noborder'><td></td></tr>");
 
     var tmpTables = []; //this array will store temporarry tables - we will append them after splitting logic is finished
     var tmpTrs = $([]); //this array will store rows for each temporarry table
@@ -174,6 +191,9 @@ $(window).load(function() {
       var tt = $('tbody tr:eq(0)');
       var aa = $('<div>');
       table.before(aa);
+    }
+    if (profile) {
+      trWalkProcessStart = new Date().getTime();
     }
     $('tbody tr', table).each(function() {
       var tr = $(this);
@@ -191,22 +211,30 @@ $(window).load(function() {
           tmpTables.push(tmpTrs);
           tmpTrs = $([]);
         }
-        
+
         currentPageZero += pageHeight;
       }
       tmpTrs.push(tr[0]);
     });
+    if (profile) {
+      trWalkProcessEnd = new Date().getTime();
+      profileDivsList.push("<div>== walk divs took:" + (trWalkProcessEnd - trWalkProcessStart) + "</div>");
+    }
     //save leftower for the page and remove the original table away
     tmpTables.push(tmpTrs);
     tmpTrs = $([]);
 
-    var originalTableHeight = table.outerHeight();    
+    var originalTableHeight = table.outerHeight();
     table.remove();
-    
+
     //append each splitted table to a collectable div
     $.each(tmpTables, function(i, trs) {
       appendTable(collectableDiv, trs, i === tmpTables.length - 1);
-    })
+    });
+
+    if (profile) {
+      resultsApppendStart = new Date().getTime();
+    }
 
     //add that div to the page and particular index - this is where rendering will take place
     var elementInParent = parent.children().eq(tableIndex);
@@ -216,6 +244,16 @@ $(window).load(function() {
       parent.children().eq(tableIndex - 1).after(collectableDiv);
     }
     pageOffset += (collectableDiv.outerHeight() - originalTableHeight);
+
+    if (profile) {
+      resultsApppendEnd = new Date().getTime();
+      profileDivsList.push("<div>== append results took:" + (resultsApppendEnd - resultsApppendStart) + "</div>");
+    }
+
+    if (profile) {
+      tableProcessEnd = new Date().getTime();
+      profileDivsList.push("<div>== process table at " + tableIndex + " took:" + (tableProcessEnd - tableProcessStart) + "</div>");
+    }
   }
 
   while (tablesModified) {
@@ -224,6 +262,7 @@ $(window).load(function() {
       var table = $('table.' + splitClassName + ':eq(0)');
       splitTable(table, table.index(), function(splittedTable) {
         //some custom post-processing for each new table
+
         var headers = splittedTable.find('.heading1');
         if (headers.length > 1) {
           splittedTable.find('.ellipsis').addClass('hidden');
@@ -238,6 +277,34 @@ $(window).load(function() {
         return splittedTable;
       });
     }
+  }
+  endTime = new Date().getTime();
+  var diffAdded = false;
+  if (profile) {
+    if (diffAdded) {
+      return;
+    }
+    var timeDiv = $('<div>');
+    var diff = endTime - startTime;
+    if (diff > 0) {
+      timeDiv.text(diff);
+    }
+    profileDivsList.push(timeDiv);
+    diffAdded = true;
+
+    $.each(profileDivsList, function(i, e) {
+      var e = $(e);
+      e.css('font-size', '18px');
+      e.css('color', 'red');
+      e.css('font-weight', 'bold');
+      profileDiv.append(e);
+    });
+
+    profileDiv.css('position', 'absolute');
+    profileDiv.css('left', '0');
+    profileDiv.css('top', '250px');
+    profileDiv.css('background-color', 'white');
+    $('body').append(profileDiv);
   }
   // restore body's padding
   $body.css('padding-left', 0);
