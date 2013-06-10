@@ -39,13 +39,13 @@
  * @type {Object}
  */
 var pdfPage = {
-  width: 297/25.4, // inches
-  height: 250/25.4, // inches
+  width: 11.7, // inches
+  height: 8.3, // inches
   margins: {
-    top: 26/25.4,
+    top: 2/25.4,
     left: 2/25.4,
     right: 2/25.4,
-    bottom: 2/25.4
+    bottom: 26/25.4
   }
 };
 
@@ -55,7 +55,7 @@ var pdfPage = {
  *
  * @type {Number}
  */
-var splitThreshold = 71;
+var splitThreshold = 42;
 
 /**
  * Class name of the tables to automatically split.
@@ -79,25 +79,32 @@ var profileDiv = $('<div>');
 $(window).load(function() {
   startTime = new Date().getTime();
   // get document resolution
-  var dpi = $('<div id="dpi"></div>')
-    .css({
-    height: '1in',
-    width: '1in',
-    top: '-100%',
-    left: '-100%',
-    position: 'absolute'
-  })
-    .appendTo('body')
-    .height();
+  var _dpi = {
+    v: 0,
+    get: function (noCache) {
+       if (noCache || _dpi.v == 0) {
+          e = document.body.appendChild(document.createElement('DIV'));
+          e.style.width = '1in';
+          e.style.padding = '0';
+          _dpi.v = e.offsetWidth;
+          e.parentNode.removeChild(e);
+       }
+       return _dpi.v;
+    }
+  }
+  //for some reason _dpi.get always returns 96 which wasn't really looking good in resulting pdf
+  var dpi = 120;
+
+  var pageWidth = (pdfPage.width - pdfPage.margins.left - pdfPage.margins.right) * dpi;
   // page height in pixels
-  var pageHeight = Math.ceil(
-  (pdfPage.height - pdfPage.margins.top - pdfPage.margins.bottom) * dpi);
+  var pageHeight = (pdfPage.height - pdfPage.margins.top - pdfPage.margins.bottom) * dpi;
   // temporary set body's width and padding to match pdf's size
-  var $body = $('body#body_pdf');
-  $body.css('width', (pdfPage.width - pdfPage.margins.left - pdfPage.margins.right) + 'in');
-  // $body.css('padding-left', pdfPage.margins.left + 'in');
-  // $body.css('padding-right', pdfPage.margins.right + 'in');
-  // $body.css('padding-top', pdfPage.margins.top + 'in');
+  var $body = $('body .report_data'); //a single div should wrap whole pdf content
+  $body.css('width', pageWidth);
+  $body.css('margin-left', pdfPage.margins.left + 'in');
+  $body.css('margin-right', pdfPage.margins.right + 'in');
+  $body.css('margin-top', pdfPage.margins.top + 'in');
+  $body.css('margin-bottom', pdfPage.margins.bottom + 'in');
 
   var currentPageZero = 0; //the offset for the currentPage. Will go with pageHeight increments page by page
   var tablesModified = true;
@@ -131,7 +138,7 @@ $(window).load(function() {
       var splitTable = templateTable.clone();
       var splitTableBody = splitTable.find('tbody');
       splitTableBody.append(trs);
-     
+      
       //pass a new table to a custom process function for some post-processing if required
       if ($.isFunction(onTableSplittedCallback)) {
         splitTable = onTableSplittedCallback(splitTable);
@@ -151,12 +158,13 @@ $(window).load(function() {
       tableProcessStart = new Date().getTime();
     }
 
+    table.css('width', pageWidth);
+
     var parent = table.parent();
     
     table.removeClass(splitClassName);
 
     if (table.hasClass('charts')) {
-      pageOffset += table.height();
       var a = breaker.clone();
       if (debug) {
         a.text(pageOffset);
@@ -169,24 +177,40 @@ $(window).load(function() {
     //find our header
     var originalHeader = table.find('tr.heading1');
     var tableHeader;
+    var tableHeaderHeight;
     if (originalHeader.length > 0) {
       tableHeader = originalHeader.clone();
       tableHeader.addClass('page-split'); //mark header so we could display that this one is splitted
-      tableHeader = tableHeader.before("<tr><td class='ellipsis'>...</td></tr>"); //add some ellipsis
+      /*
+      * In my project we had to add ellipsis before header on each new page
+      * Feel free to modify this part.
+      * Idea here is that first row of the table determines all column widths, and if it will not be exactly as our header row - table will be messed up significantly
+      * So, we have to make a copy of our header, clean it from the text and add some ellipsis
+      */
+      var ellipsis = tableHeader.clone();
+      ellipsis.removeClass('heading1');
+      ellipsis.find('th,td').each(function(i, e) {
+        $(e).text("");
+      });
+      var ellipsisDiv = $('<div>').addClass('ellipsis').text("...");
+      ellipsis.find('th:eq(0),td:eq(0)').append(ellipsisDiv);
+      //!careful here. first row of table determines column widths!
+      tableHeader = tableHeader.before(ellipsis);
     }
-
 
     //This will be template table that we will use for all splitted tables on new pages
     //we clone it so it would be the same as original, but remove all tr's, and add our customised header
     var templateTable = table.clone();
     templateTable.find('tbody > tr').remove();
     templateTable.append(tableHeader); //add common header to every template table
+    //Again, this was project-specific, I had to add this row to make styling work properly. Feel free to remove.
     templateTable.append("<tr class='noborder'><td></td></tr>");
 
     var tmpTables = []; //this array will store temporarry tables - we will append them after splitting logic is finished
-    var tmpTrs = $([]); //this array will store rows for each temporarry table
+    var tmpTrs = []; //this array will store rows for each temporarry table
     var collectableDiv = $('<div>'); //this div will collect our splitted table
 
+    /*Feel free to strip out debuggin and profiling to minimize script size*/
     if (debug) {
       var tt = $('tbody tr:eq(0)');
       var aa = $('<div>');
@@ -195,43 +219,66 @@ $(window).load(function() {
     if (profile) {
       trWalkProcessStart = new Date().getTime();
     }
+
     $('tbody tr', table).each(function() {
       var tr = $(this);
       //get offset for current page, taking custom pageOffset into consideration
       var trTop = tr.offset().top - currentPageZero - pageOffset;
+
       if (debug) {
         aa.text(aa.text() + "(o:" + tr.offset().top + " : t:" + trTop + " || ");
       }
+
       //if we fit the page with threshold - go ahead and push tr into tmpTrs array
       if (trTop >= pageHeight - splitThreshold) { //else go to the next page
         if (tmpTrs.length == 1 && $(tmpTrs[0]).hasClass('heading1')) {
-          tmpTables.push($([])); //if the only row we have fit the page is a header - add a page split and move on - we don't need a single header left in the end of the page
+          tmpTables.push([]); //if the only row we have fit the page is a header - add a page split and move on - we don't need a single header left in the end of the page
         } else {
-          //save table and start new
-          tmpTables.push(tmpTrs);
-          tmpTrs = $([]);
+          //another special case. if we hit the page end and  prev.row is 'heading2' - don't leave it last on the page
+          if ($(tmpTrs[tmpTrs.length - 1]).hasClass('heading2')) {
+            var heading2Row = tmpTrs.pop();
+            var heading1Row = null;
+            if ($(tmpTrs[tmpTrs.length - 1]).hasClass('heading1')) { //if it turnes out that heading1 is before - pop it also
+              heading1Row = tmpTrs.pop();
+            }
+            tmpTables.push(tmpTrs);
+            tmpTrs = [];
+            if (heading1Row) {
+              tmpTrs.push(heading1Row);
+            }
+            tmpTrs.push(heading2Row);
+          } else {
+            //save table and start new
+            tmpTables.push(tmpTrs);
+            tmpTrs = [];
+          }
         }
-
+        
         currentPageZero += pageHeight;
       }
       tmpTrs.push(tr[0]);
     });
+
+    /*Feel free to strip out debuggin and profiling to minimize script size*/
     if (profile) {
       trWalkProcessEnd = new Date().getTime();
-      profileDivsList.push("<div>== walk divs took:" + (trWalkProcessEnd - trWalkProcessStart) + "</div>");
+      profileDivsList.push("<div>== walk divs took:" + (trWalkProcessEnd - trWalkProcessStart) + "</div>")
     }
+
     //save leftower for the page and remove the original table away
     tmpTables.push(tmpTrs);
-    tmpTrs = $([]);
+    tmpTrs = [];
 
-    var originalTableHeight = table.outerHeight();
+    var originalTableHeight = table.outerHeight();    
+    collectableDiv.css('width', table.width());
     table.remove();
-
+    
     //append each splitted table to a collectable div
     $.each(tmpTables, function(i, trs) {
       appendTable(collectableDiv, trs, i === tmpTables.length - 1);
-    });
+    })
 
+    /*Feel free to strip out debuggin and profiling to minimize script size*/
     if (profile) {
       resultsApppendStart = new Date().getTime();
     }
@@ -243,16 +290,16 @@ $(window).load(function() {
     } else {
       parent.children().eq(tableIndex - 1).after(collectableDiv);
     }
-    pageOffset += (collectableDiv.outerHeight() - originalTableHeight);
+    pageOffset += (collectableDiv.outerHeight() - originalTableHeight); //new table can be greater then the original because we added some new headers
 
+    /*Feel free to strip out debuggin and profiling to minimize script size*/
     if (profile) {
       resultsApppendEnd = new Date().getTime();
-      profileDivsList.push("<div>== append results took:" + (resultsApppendEnd - resultsApppendStart) + "</div>");
+      profileDivsList.push("<div>== append results took:" + (resultsApppendEnd - resultsApppendStart) + "</div>")
     }
-
     if (profile) {
       tableProcessEnd = new Date().getTime();
-      profileDivsList.push("<div>== process table at " + tableIndex + " took:" + (tableProcessEnd - tableProcessStart) + "</div>");
+      profileDivsList.push("<div>== process table at " + tableIndex + " took:" + (tableProcessEnd - tableProcessStart) + "</div>")
     }
   }
 
@@ -261,8 +308,7 @@ $(window).load(function() {
     while($('table.' + splitClassName).length > 0) {
       var table = $('table.' + splitClassName + ':eq(0)');
       splitTable(table, table.index(), function(splittedTable) {
-        //some custom post-processing for each new table
-
+        //some custom post-processing for each new table. This aslo was project-specific, feel free to modify
         var headers = splittedTable.find('.heading1');
         if (headers.length > 1) {
           splittedTable.find('.ellipsis').addClass('hidden');
@@ -276,8 +322,10 @@ $(window).load(function() {
         }
         return splittedTable;
       });
-    }
+    } 
   }
+
+  /*Feel free to strip out debuggin and profiling to minimize script size*/
   endTime = new Date().getTime();
   var diffAdded = false;
   if (profile) {
@@ -306,6 +354,7 @@ $(window).load(function() {
     profileDiv.css('background-color', 'white');
     $('body').append(profileDiv);
   }
+  
   // restore body's padding
   $body.css('padding-left', 0);
   $body.css('padding-right', 0);
