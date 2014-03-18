@@ -1,0 +1,85 @@
+<div class="report_data">
+<table class="splitForPrint">
+  <tr class="heading1">
+    <th colspan="3"><h1><%= t("reports.availability.summary") %></h1></th>
+  </tr>
+  <tr class="heading2">
+    <th colspan="3"><%= t("reports.availability.top") %></th>
+  </tr>
+  <% @summary.each do |v| %>
+  <tr>
+    <td><%= v[:machine]%></td>
+    <td class="nowrap"><%= v[:category]%></td>
+    <td><%= v[:total]%></td>
+  </tr>
+  <% end %>
+  <tr class="heading2">
+    <th colspan="3"><%= t("reports.availability.statistics.title") %></th>
+  </tr>
+  <tr>
+    <td colspan="1"><%= t("reports.availability.statistics.average_time") %></td>
+    <td colspan="2"><%= time_in_words(@statistics[:average_time], :long => true) %></td>
+  </tr>
+  <tr>
+    <td colspan="1"><%= t("reports.availability.statistics.resolved_status") %></td>
+    <td colspan="2"><%= @statistics[:resolved_total] %> / <%= @statistics[:not_resolved_total] %> / <%= @statistics[:snoozed_total] %></td>
+  </tr>
+  
+</table>
+<table class="splitForPrint new_section">
+  <tr class="heading1">
+    <th><h1><%= t("reports.availability.asset") %></h1></th>
+    <th><%= t("reports.availability.type") %></th>
+    <th><%= t("reports.availability.issue") %></th>
+    <th class="date"><%= t("reports.availability.first_seen") %></th>
+    <th class="date"><%= t("reports.availability.resolved") %></th>
+    <th class="date"><%= t("reports.availability.duration") %></th>
+  </tr>
+  <% @grouping_by_category.each do |key, value| %>
+    <tr class="heading2">
+      <th colspan="6">
+        <h2><%= t("reports.availability.issue_summary",
+              :category => key,
+              :not_resolved_qty => value[:not_resolved_qty],
+              :resolved_qty => value[:resolved_qty],
+              :total => value[:not_resolved_qty] +  value[:resolved_qty]) %></h2>
+      </th>
+    </tr>
+    <% value[:values].each do |item| %>
+      <tr>
+        <td class="nocap"><%= item[:asset_name] %></td>
+        <td class="nowrap"><%= item[:issue_type] %></td>
+        <td><%= item[:message] %></td>
+        <td class="nowrap"><%= datetime_from_unixtime(item[:first_seen], @report.timezone_object) %></td>
+        <td class="nowrap"><%= datetime_from_unixtime(item[:resolved], @report.timezone_object) %></td>
+        <td class="nowrap"><%= time_in_words(item[:duration]) %></td>
+      </tr>
+    <% end %>
+  <% end %>
+  
+</table>
+<table class="splitForPrint new_section">
+  <tr class="heading1">
+    <th><h1><%= t("reports.availability.notified") %></h1></th>
+    <th class="nowrap"><%= t("reports.availability.host") %></th>
+    <th><%= t("reports.availability.issue") %></th>
+    <th class="nowrap"><%= t("reports.availability.date") %></th>
+  </tr>
+  <tr class="heading2">
+    <th colspan="4">
+        <h2><%= t("reports.availability.notification_summary",
+          :total => @notifications.length) %></h2>
+    </th>
+  </tr>
+  <tr class="noborder"><td></td></tr>
+  <% @notifications.each do |item| %>
+      <tr>
+        <td class="nocap"><%= item[:sent_to] %></td>
+        <td class="nowrap"><%= item[:host] %></td>
+        <td><%= item[:issue] %></td>
+        <td class="nowrap"><%= datetime_from_unixtime(item[:dateEpoch], @report.timezone_object) %></td>
+      </tr>
+    <% end %>
+</table>
+
+</div>

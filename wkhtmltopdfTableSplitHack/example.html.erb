@@ -1,0 +1,325 @@
+<div class="report_data">
+  <table class="charts">
+    <tr class="heading1">
+      <th colspan="4"><%= t("reports.hardware.summary") %></th>
+    </tr>
+    <tr class="first">
+      <td class="noborder"></td>
+    </tr>
+    <tr class="chart_header">
+      <td>
+        <p><%= t("reports.hardware.graphs.manufacturer") %></p>
+
+        <p class="description"><%= t("reports.hardware.graphs.devices") %></p>
+      </td>
+      <td colspan="2">
+        <p><%= t("reports.hardware.graphs.type") %></p>
+
+        <p class="description"><%= t("reports.hardware.graphs.devices") %></p>
+      </td>
+      <td colspan="2">
+        <p><%= t("reports.hardware.graphs.turnover") %></p>
+
+        <p class="description"><%= t("reports.hardware.graphs.turnover_description") %></p>
+      </td>
+    </tr>
+    <tr>
+      <td class="chart_cell">
+        <%
+        divName = "chartManufacturer"
+        safe_concat('
+          <div id="' + divName + '"></div>
+          <script type="text/javascript">
+            myD3Wrapper().pieChart("#' + divName + '", ' + @chart_data[:manufacturers].to_json + ', {width: 200, height: 200, noData: {
+              type: "neutral",
+              message: "No devices found for this time period"
+            }})
+      </script>')
+      %>
+    </td>
+    <td class="chart_cell" colspan="2">
+      <%
+      divName = "chartTypes"
+      safe_concat('
+        <div id="' + divName + '"></div>
+        <script type="text/javascript">
+          myD3Wrapper().pieChart("#' + divName + '", ' + @chart_data[:types].to_json + ', {width: 200, height: 200})
+        </script>')
+        %>
+      </td>
+      <td class="chart_cell">
+        <%
+        divName = "chartStatistics"
+        safe_concat('
+          <div id="' + divName + '"></div>
+          <script type="text/javascript">
+            myD3Wrapper().pieChart("#' + divName + '", ' + @chart_data[:statistics].to_json + ', {width: 200, height: 200, noData: {
+              type: "neutral",
+              message: "No turnover for this time period"
+            }})
+      </script>')
+      %>
+    </td>
+  </tr>
+</table>
+
+<!-- server and computers -->
+<% if !(@servers.empty? && @computers.empty?) %>
+<table class="splitForPrint">
+  <tr class="heading1">
+    <th><h1><%= t("reports.hardware.machine_name") %></h1></th>
+    <th class="manufacturer"><%= t("reports.hardware.manufacturer") %></th>
+    <th><%= t("reports.hardware.model") %></th>
+    <th><%= t("reports.hardware.cpu") %></th>
+    <th class="number center-header"><%= t("reports.hardware.memory") %><%= t("reports.hardware.memory_2nd") %></th>
+    <th class="number center-header"><%= t("reports.hardware.disk_capacity") %><%= t("reports.hardware.disk_capacity_2nd") %></th>
+    <th colspan="2"><%= t("reports.hardware.os") %></th>
+    <th class="width_20"><%= t("reports.hardware.serial_number") %></th>
+    <th><%= t("reports.hardware.last_user") %></th>
+    <th class="date"><%= t("reports.hardware.last_seen") %></th>
+  </tr>
+  <% end %>
+  <% if !@servers.empty? %>
+  <tr class="heading2">
+    <th colspan="11"><h2><%= t("reports.hardware.hardware_type_total", :type => type, :total => items.size) %></h2></th>
+  </tr>
+
+  <% items.sort_by{ |h| h[:machine_name] }.each do |hardware_item| %>
+  <tr>
+    <td>
+      <%= hardware_item[:machine_name] %>
+      <% if hardware_item[:incoming] %>
+      (new) 
+      <% elsif hardware_item[:outgoing] %>
+      (retired) 
+      <% end %> 
+    </td>
+    <td><%= hardware_item[:manufacturer] %></td>
+    <td><%= hardware_item[:model] %></td>
+    <td><%= hardware_item[:cpu_number].nil? ? 'unknown' : hardware_item[:cpu_number] + ' x ' %><%= hardware_item[:cpu] %></td>
+    <td class="number"><%= hardware_item[:memory] %></td>
+    <td class="number"><%= hardware_item[:disk_capacity] %></td>
+    <td colspan="2"><%= hardware_item[:os] %></td>
+    <td class="width_20"><%= hardware_item[:serial_number].nil? ? 'unknown' : hardware_item[:serial_number] %></td>
+    <td><%= hardware_item[:last_user] %></td>
+    <td class="date"><%= datetime_from_unixtime(hardware_item[:last_seen], @report.timezone_object) %></td>
+  </tr>
+  <% end %>
+  <% end %>
+  <% if !@computers.empty? %>
+  
+  <tr class="heading2">
+    <th colspan="11"><h2><%= t("reports.hardware.hardware_type_total", :type => type, :total => items.size) %></h2></th>
+  </tr>
+
+  <% items.sort_by{ |h| h[:machine_name] }.each do |hardware_item| %>
+  <tr>
+    <td>
+      <%= hardware_item[:machine_name] %>
+      <% if hardware_item[:incoming] %>
+      (new) 
+      <% elsif hardware_item[:outgoing] %>
+      (retired) 
+      <% end %> 
+    </td>
+    <td><%= hardware_item[:manufacturer] %></td>
+    <td><%= hardware_item[:model] %></td>
+    <td><%= hardware_item[:cpu_number].nil? ? 'unknown' : hardware_item[:cpu_number] + ' x ' %><%= hardware_item[:cpu] %></td>
+    <td class="number"><%= hardware_item[:memory] %></td>
+    <td class="number"><%= hardware_item[:disk_capacity] %></td>
+    <td colspan="2"><%= hardware_item[:os] %></td>
+    <td class="width_20"><%= hardware_item[:serial_number].nil? ? 'unknown' : hardware_item[:serial_number] %></td>
+    <td><%= hardware_item[:last_user] %></td>
+    <td class="date"><%= datetime_from_unixtime(hardware_item[:last_seen], @report.timezone_object) %></td>
+  </tr>
+  <% end %>
+
+  <% end %>
+</table>
+
+<% if !@printers.empty? %>
+<table class="new_section splitForPrint">
+  <!-- printers -->
+  <tr class="heading1">
+    <th><h1><br><%= t("reports.hardware.ip") %></h1></th>
+    <th><br><%= t("reports.hardware.manufacturer") %></th>
+    <th colspan="2"><br><%= t("reports.hardware.model") %></th>
+    <th class="number"><%= t("reports.hardware.memory") %>
+      <br><%= t("reports.hardware.memory_2nd") %></th>
+      <th class="number"><br><%= t("reports.hardware.printers.tray") %></th>
+      <th class="number"><%= t("reports.hardware.printers.pages") %>
+        <br><%= t("reports.hardware.printers.pages_2nd") %></th>
+        <th class="width_20" colspan="2"><br><%= t("reports.hardware.serial_number") %></th>
+        <th class="date"><br><%= t("reports.hardware.last_seen") %></th>
+      </tr>
+      <tr class="heading2">
+        <th colspan="8">
+          <h2><%= t("reports.hardware.hardware_type_total", :type => :printers, :total => @printers.size) %></h2></th>
+        </tr>
+        <% @printers.sort_by { |h| h[:machine_name] }.each do |hardware_item| %>
+        <tr>
+          <td>
+            <%= hardware_item[:machine_name] %>
+            <% if hardware_item[:incoming] %>
+            (new)
+            <% elsif hardware_item[:outgoing] %>
+            (retired)
+            <% end %>
+          </td>
+          <td><%= hardware_item[:manufacturer] %></td>
+          <td colspan="2"><%= hardware_item[:model] %></td>
+          <td class="number"><%= hardware_item[:memory] %></td>
+          <td class="number"><%= hardware_item[:trays] %></td>
+          <td class="number"><%= hardware_item[:pages] %></td>
+          <td class="width_20" colspan="2"><%= hardware_item[:serial_number] %></td>
+          <td class="date"><%= datetime_from_unixtime(hardware_item[:last_seen], @report.timezone_object) %></td>
+        </tr>
+        <% end %>
+      </table>
+      <% end %>
+
+      <% if !@switches.empty? %>
+      <table class="new_section splitForPrint">
+        <!-- switches -->
+        <tr class="heading1">
+          <th><h1><%= t("reports.hardware.ip") %></h1></th>
+          <th><%= t("reports.hardware.manufacturer") %></th>
+          <th colspan="2"><%= t("reports.hardware.model") %></th>
+          <th class="number"><%= t("reports.hardware.switches.ports") %></th>
+          <th colspan="2"><%= t("reports.hardware.switches.speed") %></th>
+          <th><%= t("reports.hardware.firmware") %></th>
+          <th class="width_20" colspan="2"><%= t("reports.hardware.serial_number") %></th>
+          <th class="date"><%= t("reports.hardware.last_seen") %></th>
+        </tr>
+        <tr class="heading2">
+          <th colspan="11">
+            <h2><%= t("reports.hardware.hardware_type_total", :type => :switches, :total => @switches.size) %></h2></th>
+          </tr>
+          <% @switches.sort_by { |h| h[:machine_name] }.each do |hardware_item| %>
+          <tr>
+            <td>
+              <%= hardware_item[:machine_name] %>
+              <% if hardware_item[:incoming] %>
+              (new)
+              <% elsif hardware_item[:outgoing] %>
+              (retired)
+              <% end %>
+            </td>
+            <td><%= hardware_item[:manufacturer] %></td>
+            <td colspan="2"><%= hardware_item[:model] %></td>
+            <td class="number"><%= hardware_item[:ports] %></td>
+            <td colspan="2"><%= hardware_item[:speed] %></td>
+            <td><%= hardware_item[:firmware] %></td>
+            <td colspan="2"><%= hardware_item[:serial_number] %></td>
+            <td class="date"><%= datetime_from_unixtime(hardware_item[:last_seen], @report.timezone_object) %></td>
+          </tr>
+          <% end %>
+        </table>
+        <% end %>
+
+        <% if !@storage_units.empty? %>
+        <table class="new_section splitForPrint">
+          <!-- storage_units -->
+          <tr class="heading1">
+            <th><h1><%= t("reports.hardware.ip") %></h1></th>
+            <th><%= t("reports.hardware.manufacturer") %></th>
+            <th colspan="2"><%= t("reports.hardware.model") %></th>
+            <th class="number"><%= t("reports.hardware.switches.disks") %></th>
+            <th colspan="2"></th>
+            <th><%= t("reports.hardware.firmware") %></th>
+            <th class="width_20" colspan="2"><%= t("reports.hardware.serial_number") %></th>
+            <th class="date"><%= t("reports.hardware.last_seen") %></th>
+          </tr>
+          <tr class="heading2">
+            <th colspan="11">
+              <h2><%= t("reports.hardware.hardware_type_total", :type => :storage, :total => @storage_units.size) %></h2>
+            </th>
+          </tr>
+          <% @storage_units.sort_by { |h| h[:machine_name] }.each do |hardware_item| %>
+          <tr>
+            <td>
+              <%= hardware_item[:machine_name] %>
+              <% if hardware_item[:incoming] %>
+              (new)
+              <% elsif hardware_item[:outgoing] %>
+              (retired)
+              <% end %>
+            </td>
+            <td><%= hardware_item[:manufacturer] %></td>
+            <td colspan="2"><%= hardware_item[:model] %></td>
+            <td class="number"><%= hardware_item[:disks] %></td>
+            <td colspan="2"></td>
+            <td><%= hardware_item[:firmware] %></td>
+            <td class="width_20" colspan="2"><%= hardware_item[:serial_number] %></td>
+            <td class="date"><%= datetime_from_unixtime(hardware_item[:last_seen], @report.timezone_object) %></td>
+          </tr>
+          <% end %>
+        </table>
+        <% end %>
+
+        <% if !@ups.empty? %>
+        <table class="new_section splitForPrint">
+          <!-- ups -->
+          <tr class="heading1">
+            <th><h1><%= t("reports.hardware.ip") %></h1></th>
+            <th><%= t("reports.hardware.manufacturer") %></th>
+            <th colspan="2"><%= t("reports.hardware.model") %></th>
+            <th colspan="2"><%= t("reports.hardware.ups.status") %></th>
+            <th><%= t("reports.hardware.ups.temp") %></th>
+            <th><%= t("reports.hardware.ups.replace") %></th>
+            <th class="width_20"><%= t("reports.hardware.serial_number") %></th>
+            <th class="number"><%= t("reports.hardware.ups.last_replaced") %></th>
+            <th class="date"><%= t("reports.hardware.last_seen") %></th>
+          </tr>
+          <tr class="heading2">
+            <th colspan="11">
+              <h2><%= t("reports.hardware.hardware_type_total", :type => :ups, :total => @ups.size) %></h2></th>
+            </tr>
+            <% @ups.sort_by { |h| h[:machine_name] }.each do |hardware_item| %>
+            <tr>
+              <td>
+                <%= hardware_item[:machine_name] %>
+                <% if hardware_item[:incoming] %>
+                (new)
+                <% elsif hardware_item[:outgoing] %>
+                (retired)
+                <% end %>
+              </td>
+              <td><%= hardware_item[:manufacturer] %></td>
+              <td colspan="2"><%= hardware_item[:model] %></td>
+              <td colspan="2"><%= hardware_item[:status] %></td>
+              <td><%= hardware_item[:temperature] %></td>
+              <td><%= hardware_item[:replace_battery] %></td>
+              <td><%= hardware_item[:serial_number] %></td>
+              <td class="number"><%= datetime_from_unixtime(hardware_item[:date_battery_last_replaced], @report.timezone_object) %></td>
+              <td class="date"><%= datetime_from_unixtime(hardware_item[:last_seen], @report.timezone_object) %></td>
+            </tr>
+            <% end %>
+          </table>
+          <% end %>
+
+  <table class="new_section splitForPrint">
+    <!-- models per manufactor -->
+    <tr class="heading1">
+      <th colspan="11"><h1><%= t("reports.hardware.analysis") %></h1></th>
+    </tr>
+    <tr class="heading2">
+      <th colspan="11"><%=
+  	  # Show blank slate if nothing in summary
+  	  if @summary[:models].length > 0
+        t("reports.hardware.number_of_models")
+      else
+  		# FIXME: i18n
+  		"No devices found for the time period"
+   end
+   %></th>
+  </tr>
+  <% @summary[:models].sort_by { |h| h[:manufacturer] }.each do |model_summary| %>
+  <tr>
+    <td><%= model_summary[:manufacturer] %></td>
+    <td colspan="3"><%= model_summary[:model] %></td>
+    <td colspan="7"><%= model_summary[:qty] %></td>
+  </tr>
+<% end %>
+</table>
+</div>
