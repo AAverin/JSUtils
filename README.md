@@ -198,7 +198,7 @@ This is where this script becomes handy.
 
 
 An intellectual script that splits tables from your html page into a multiple-page pdf layout.
-Script is optimized to leverage large amounts of data, so splitting into 100+ pages should be much of a problem.
+Script is optimized to leverage large amounts of data, so splitting into 100+ pages shouldn't be much of a problem.
 
 The idea is quite simple.
 - First you set pdf page settings using pdfInfo object.
